@@ -1,4 +1,5 @@
 import random
+import pdb
 from mnist import MNIST
 mndata = MNIST('./python-mnist/data')
 images, labels = mndata.load_training()
@@ -44,39 +45,24 @@ class neuralnet():
         return error_derivative
 
 
-    def symbolic_error_derivative(self, x, target, i, j): #not agreeing with numerical
+    def symbolic_error_derivative(self, x, target, i, j): 
         error_derivative = -1*x[i]*(target[j]-self.compute_output(x)[j])
         return error_derivative
 
-    def learn_method_1(self, x, target):
-        error = 100
-        iter = 0
-        while error >= 1:
-            output = self.compute_output(x)
-            self.weights
-            for i in range(self.x_length):
-                for j in range(self.output_length):
-                    self.weights[j][i] -= self.numeric_derivative_error_right(x, target, i, j, compute_error(x, target))*self.weights[j][i]
-                    debug(error)
-                print(i)
-            error = self.compute_error(self.compute_output(x), target)
-            iter += 1
-    def learn_method_2(self, x, target):
-        error = 100
-        iter = 0
-        while error >= 1:
-            output = self.compute_output(x)
-            self.weights
-            for i in range(self.x_length):
-                for j in range(self.output_length):
-                    self.weights[j][i] -= self.symbolic_error_derivative(x, target, i, j, self.compute_error(x, target))*self.weights[j][i]
-                    debug(error)
-                print(i)
-            error = self.compute_error(self.compute_output(x), target)
-            iter += 1
+    def learn(self, x, target):
+        output = self.compute_output(x)
+        #pdb.set_trace()
+        for i in range(self.x_length):
+            for j in range(self.output_length):
+                self.weights[j][i] -= self.symbolic_error_derivative(x, target, i, j)*self.weights[j][i]
 	
-        return error
-        return self.compute_output(x)
+    def learnmnist(self, images,labels, number_to_learn):
+        for image, label in zip(images[:number_to_learn],labels[:number_to_learn]):
+            target = to_one_hot(label,10)
+            print "before", self.compute_error(self.compute_output(image), target)
+            self.learn(image, target)
+            print "after", self.compute_error(self.compute_output(image), target)
+
 def debug(*x):
     return
     for i in x:
@@ -89,25 +75,9 @@ assert to_one_hot(3,10) == [0,0,0,1,0,0,0,0,0,0]
 
 def main(): 
     x = images[0]
-    target = to_one_hot(label[0])
+    target = to_one_hot(labels[0], 10)
     print labels[0]
-    a = neuralnet(len(x), len(target))
-
-    x = [random.random() for i in range(n)] #784 can be replaced by len(x), 10 by output_length
-    #output = a.compute_output(x)
-    #error = a.compute_error(output, target)
-    #error_derivative_numeric = a.numeric_derivative_error(x, target, 0, 0)
-    #error_derivative_symbolic = a.symbolic_error_derivative(x, target, 0, 0)
-    #debug("error: ",error)
-    #debug("output 1: ", output)
-    #debug("numeric: ",error_derivative_numeric)
-    #debug("symbolic: ",error_derivative_symbolic)
-    #error = a.learn_method_1(x, target)
-    #debug("error 2:", error)
-    #a.learn_method_2(x, target)
-
-    #debug("output 2:", output)
+    test_net = neuralnet(len(x), len(target)) 
+    test_net.learnmnist(images, labels, 10)
     
 main()
-
-
