@@ -1,15 +1,17 @@
 import random
 import pdb
 from mnist import MNIST
-mndata = MNIST('./python-mnist/data')
-images, labels = mndata.load_training()
 
+
+def rescale_image(image):
+    return [(i-127.5)/256 for i in image]
 
 class neuralnet():
-    def __init__(self, x_length, output_length):
-        self.weights = [[1 for i in range(x_length)] for j in range(output_length)] #784 can be replaced by len(x), 10 by output_length
+    def __init__(self, x_length, output_length, rate=.01):
+        self.weights = [[random.uniform(-1,1) for i in range(x_length)] for j in range(output_length)] 
         self.x_length = x_length
         self.output_length = output_length
+        self.learn_rate = rate
 
     def compute_output(self, x):        #computes output based on weights and x
         output = [0]*self.output_length
@@ -52,11 +54,7 @@ class neuralnet():
     def learn(self, x, target):
         for j in range(self.output_length):
             for i in range(self.x_length):
-                derivative = self.symbolic_error_derivative(x, target, i, j)  
-                if abs(derivative) == derivative:
-                    self.weights -= self.weights[j][i]*self.symbolic_error_derivative(x,target,i,j)
-                else:
-                    self.weights += self.weights[j][i]*self.symbolic_error_derivative(x,target,i,j)
+                self.weights[j][i] -= self.learn_rate * self.symbolic_error_derivative(x,target,i,j)
 
     def learnmnist(self, images,labels, number_to_learn):
         for image, label in zip(images[:number_to_learn],labels[:number_to_learn]):
@@ -76,11 +74,20 @@ def to_one_hot(i, length):
 
 assert to_one_hot(3,10) == [0,0,0,1,0,0,0,0,0,0]
 
+
 def main(): 
+    mndata = MNIST('./python-mnist/data')
+    length_to_parse = 20
+    pre_images, labels = mndata.load_training()
+    images = map(rescale_image, pre_images[:length_to_parse])
+    labels = labels[:length_to_parse]
+
     x = images[0]
     target = to_one_hot(labels[0], 10)
     print labels[0]
     test_net = neuralnet(len(x), len(target)) 
-    #test_net.learnmnist(images, labels, 1)
+    print test_net.compute_error(test_net.compute_output(x), target)
+    test_net.learnmnist(images, labels, 10)
+    assert abs(test_net.numeric_derivative_error(x,target,152,3) - test_net.symbolic_error_derivative(x,target,152,3)) < abs(test_net.numeric_derivative_error(x,target,152,3)) * .02
     print test_net.compute_output(x)
 main()
