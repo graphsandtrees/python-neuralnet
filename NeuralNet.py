@@ -7,14 +7,14 @@ images, labels = mndata.load_training()
 
 class neuralnet():
     def __init__(self, x_length, output_length):
-        self.weights = [[random.random() for i in range(x_length)] for j in range(output_length)] #784 can be replaced by len(x), 10 by output_length
+        self.weights = [[1 for i in range(x_length)] for j in range(output_length)] #784 can be replaced by len(x), 10 by output_length
         self.x_length = x_length
         self.output_length = output_length
 
     def compute_output(self, x):        #computes output based on weights and x
         output = [0]*self.output_length
-        for i in range(self.x_length):
-            for j in range(self.output_length):
+        for j in range(self.output_length):
+            for i in range(self.x_length):
                 output[j] += x[i]*self.weights[j][i]
         return output
 
@@ -46,22 +46,25 @@ class neuralnet():
 
 
     def symbolic_error_derivative(self, x, target, i, j): 
-        error_derivative = -1*x[i]*(target[j]-self.compute_output(x)[j])
+        error_derivative = float(-1*x[i]*(target[j]-self.compute_output(x)[j]))
         return error_derivative
 
     def learn(self, x, target):
-        output = self.compute_output(x)
-        #pdb.set_trace()
-        for i in range(self.x_length):
-            for j in range(self.output_length):
-                self.weights[j][i] -= self.symbolic_error_derivative(x, target, i, j)*self.weights[j][i]
-	
+        for j in range(self.output_length):
+            for i in range(self.x_length):
+                derivative = self.symbolic_error_derivative(x, target, i, j)  
+                if abs(derivative) == derivative:
+                    self.weights -= self.weights[j][i]*self.symbolic_error_derivative(x,target,i,j)
+                else:
+                    self.weights += self.weights[j][i]*self.symbolic_error_derivative(x,target,i,j)
+
     def learnmnist(self, images,labels, number_to_learn):
         for image, label in zip(images[:number_to_learn],labels[:number_to_learn]):
             target = to_one_hot(label,10)
-            print "before", self.compute_error(self.compute_output(image), target)
+            #pdb.set_trace()
+
             self.learn(image, target)
-            print "after", self.compute_error(self.compute_output(image), target)
+            print self.compute_error(self.compute_output(image), target)
 
 def debug(*x):
     return
@@ -78,6 +81,6 @@ def main():
     target = to_one_hot(labels[0], 10)
     print labels[0]
     test_net = neuralnet(len(x), len(target)) 
-    test_net.learnmnist(images, labels, 10)
-    
+    #test_net.learnmnist(images, labels, 1)
+    print test_net.compute_output(x)
 main()
